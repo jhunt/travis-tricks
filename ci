@@ -1,3 +1,22 @@
 #!/bin/bash
+TRAVIS_COMMIT_RANGE=53a64b5b854b...f96b5b3e2419
 
-set
+failed=''
+for x in $(git log --pretty=format:'%aE' ${TRAVIS_COMMIT_RANGE}); do
+	if grep -q '^[^#].*<'$x'>' allowed; then
+		echo "FOUND $x in list of allowed contributors:"
+		grep '^[^#].*<'$x'>' allowed
+	else
+		echo "<${x}> not found in allowed contributors:"
+		cat allowed
+		failed='y'
+	fi
+done
+
+if [[ -z ${failed} ]]; then
+	echo "CLA found!"
+	exit 0
+fi
+
+echo "No CLA found... :sadpanda:"
+exit 1
