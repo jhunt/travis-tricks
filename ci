@@ -6,27 +6,23 @@ git log --pretty=format:' %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}
 echo " ...)"
 echo
 
-passchar="\xe2\x9c\x94" # U+2714 - ballot check
-failchar="\xe2\x9c\x98" # U+2718 - ballot x
+check_cla() {
+  local passchar="\xe2\x9c\x94" # U+2714 - ballot check
+  local failchar="\xe2\x9c\x98" # U+2718 - ballot x
+  local rc=0
+  local IFS=$'\n'
+  for x in $(git log --pretty=format:'%aE %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}); do
+    email=${x%% *}
+    desc=${x#* }
+    if grep -q '^[^#].*<'${email}'>' allowed; then
+      echo -e "\033[32m${passchar}\033[0m $desc"
+    else
+      echo -e "\033[31m${failchar}\033[0m $desc"
+      echo -e "  \033[31m<${email}> not listed in CONTRIBUTORS file!\033[0m"
+      rc=1
+    fi
+  done
+  return $rc
+}
 
-failed=
-IFS=$'\n'
-for x in $(git log --pretty=format:'%aE %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}); do
-	email=${x%% *}
-	desc=${x#* }
-	if grep -q '^[^#].*<'${email}'>' allowed; then
-		echo -e "\033[32m${passchar}\033[0m $desc"
-	else
-		echo -e "\033[31m${failchar}\033[0m $desc"
-		echo -e "  \033[31m<${email}> not listed in CONTRIBUTORS file!\033[0m"
-		failed=y
-	fi
-done
-
-if [[ -z ${failed} ]]; then
-	echo "CLA found!"
-	exit 0
-fi
-
-echo "No CLA found... :sadpanda:"
-exit 1
+check_cla
