@@ -26,3 +26,7 @@ check_cla() {
 }
 
 check_cla
+
+for x in $(echo a b c d e f); do
+	echo "found '${x}'"
+done
