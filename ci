@@ -1,16 +1,12 @@
 #!/bin/bash
 
-echo "Checking CONTRIBUTOR status..."
-echo "(specifically in these commits:"
-git log --pretty=format:' %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}
-echo " ...)"
-echo
-
 check_cla() {
   local passchar="\xe2\x9c\x94" # U+2714 - ballot check
   local failchar="\xe2\x9c\x98" # U+2718 - ballot x
   local rc=0
   local IFS=$'\n'
+
+  echo "Checking CONTRIBUTOR status..."
   for x in $(git log --pretty=format:'%aE %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}); do
     email=${x%% *}
     desc=${x#* }
@@ -22,6 +18,8 @@ check_cla() {
       rc=1
     fi
   done
+  echo
+
   return $rc
 }
 
