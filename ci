@@ -2,21 +2,24 @@
 
 echo "Checking CONTRIBUTOR status..."
 echo "(specifically in these commits:"
-git log --pretty=format:' %aE' ${TRAVIS_COMMIT_RANGE}
+git log --pretty=format:' %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}
 echo " ...)"
 echo
 
-failed=''
-for x in $(git log --pretty=format:'%aE|%h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}); do
-	email=${x##|*}
-	desc=${x%*|}
-	echo "checking ${desc}"
+passchar="\xe2\x9c\x94" # U+2714 - ballot check
+failchar="\xe2\x9c\x98" # U+2718 - ballot x
+
+failed=
+IFS=$'\n'
+for x in $(git log --pretty=format:'%aE %h - %s (%aN <%aE>)' ${TRAVIS_COMMIT_RANGE}); do
+	email=${x%% *}
+	desc=${x#* }
 	if grep -q '^[^#].*<'${email}'>' allowed; then
-		echo "$desc ... OK"
+		echo -e "\033[32m${passchar}\033[0m $desc"
 	else
-		echo "<${email}> not found in allowed contributors:"
-		echo "$desc ... FAILED"
-		failed='y'
+		echo -e "\033[31m${failchar}\033[0m $desc"
+		echo -e "  \033[31m<${email}> not listed in CONTRIBUTORS file!\033[0m"
+		failed=y
 	fi
 done
 
